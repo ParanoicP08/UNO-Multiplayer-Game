@@ -7,12 +7,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Serve static assets (HTML, CSS, JS) from the root directory
+// Tell Express to serve all static files FROM THE PUBLIC FOLDER
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Default route to serve index.html
+// Point the root route to the index.html inside the public folder
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Socket.IO event handlers
