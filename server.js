@@ -8,7 +8,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 // Serve static assets (HTML, CSS, JS) from the root directory
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Default route to serve index.html
 app.get('/', (req, res) => {
