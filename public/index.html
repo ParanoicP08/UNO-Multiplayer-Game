@@ -1,30 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>UNO Multiplayer Arena</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <h1>UNO <span>UNO</span></h1>
-      <h2>MULTIPLAYER LOUNGE</h2>
 
-      <form id="joinForm">
-        <label for="username">PLAYER NAME</label>
-        <input type="text" id="username" placeholder="Enter name" required>
 
-        <label for="room">ROOM CODE</label>
-        <input type="text" id="room" placeholder="Enter room code" required>
 
-        <button type="submit" id="joinBtn">Join Room</button>
-      </form>
+
+
+
+
+
+
+
+
+  <!-- LOBBY SCREEN -->
+  <div id="lobby-screen" class="screen-container">
+    <div class="lobby-card">
+      <div class="lobby-header">
+        <div class="logo-container">
+          <h1 class="game-title">UNO</h1>
+          
+          <!-- UNO Card Box Graphic -->
+          <div class="uno-card-box" title="UNO Deck">
+            <div class="card-box-inner">
+              <span class="box-badge">UNO</span>
+            </div>
+          </div>
+        </div>
+        <p class="lounge-subtitle">Multiplayer Lounge</p>
+      </div>
+
+      <div class="form-body">
+        <div class="input-group">
+          <label for="player-name">Player Name</label>
+          <input type="text" id="player-name" placeholder="Enter your display name..." maxlength="15" />
+        </div>
+
+        <div class="input-group">
+          <label for="room-id">Room Code</label>
+          <input type="text" id="room-id" placeholder="Enter Room ID..." maxlength="12" />
+        </div>
+
+        <div class="button-group">
+          <button id="join-btn" class="btn btn-primary">Join Room</button>
+          <button id="start-btn" class="btn btn-success" style="display: none;">Start Game</button>
+          <button id="leave-btn" class="btn btn-danger" style="display: none;">Leave</button>
+        </div>
+
+        <div id="lobby-players" class="players-list"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Socket.io library MUST be loaded before client.js -->
+  <!-- GAME SCREEN -->
+  <div id="game-screen" class="game-layout" style="display: none;">
+    <!-- Main Game Arena -->
+    <div class="game-arena">
+      <!-- Top Status Banner -->
+      <div class="status-bar">
+        <div id="status-announcement" class="status-text">Connecting...</div>
+        <div class="game-info-badges">
+          <span class="info-badge">Color: <strong id="current-color-txt" class="color-indicator">-</strong></span>
+          <span id="direction-txt" class="info-badge">Clockwise ↻</span>
+        </div>
+      </div>
+
+      <!-- Opponents Area -->
+      <div id="opponents-area" class="opponents-grid"></div>
+
+      <!-- Center Play Table -->
+      <div class="play-table">
+        <div class="deck-area">
+          <div class="card-pile-slot">
+            <span class="pile-label">DISCARD</span>
+            <div id="top-card" class="card placeholder-card">
+              <div class="card-inner"><span>?</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player Interactive Controls -->
+      <div class="controls-bar">
+        <div class="action-buttons">
+          <button id="draw-btn" class="btn btn-primary">🎴 Draw Card</button>
+          <button id="pass-btn" class="btn btn-secondary">➡️ Pass Turn</button>
+          <button id="restart-btn" class="btn btn-success" style="display: none;">🔄 Restart Game</button>
+          
+          <label class="uno-toggle">
+            <input type="checkbox" id="uno-checkbox" />
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Declare UNO!</span>
+          </label>
+        </div>
+
+        <!-- Floating Emoji Quick Reactions -->
+        <div class="reaction-bar">
+          <span class="reaction-label">Reactions:</span>
+          <button class="emoji-btn" onclick="sendReaction('🔥')">🔥</button>
+          <button class="emoji-btn" onclick="sendReaction('😂')">😂</button>
+          <button class="emoji-btn" onclick="sendReaction('😎')">😎</button>
+          <button class="emoji-btn" onclick="sendReaction('😱')">😱</button>
+          <button class="emoji-btn" onclick="sendReaction('👍')">👍</button>
+        </div>
+      </div>
+
+      <!-- My Cards Hand Area -->
+      <div class="hand-container">
+        <div class="hand-header">YOUR CARDS</div>
+        <div id="my-hand" class="cards-hand"></div>
+      </div>
+    </div>
+
+    <!-- Chat Sidebar -->
+    <div class="chat-sidebar">
+      <div class="chat-header">Room Chat</div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100" />
+        <button id="send-chat-btn" class="btn btn-primary btn-sm">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLOR PICKER MODAL -->
+  <div id="color-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h3>Choose Wild Card Color</h3>
+      <div class="color-picker-grid">
+        <button class="color-choice-btn color-red" data-color="red">Red</button>
+        <button class="color-choice-btn color-blue" data-color="blue">Blue</button>
+        <button class="color-choice-btn color-green" data-color="green">Green</button>
+        <button class="color-choice-btn color-yellow" data-color="yellow">Yellow</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCOREBOARD MODAL -->
+  <div id="scoreboard-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h2 id="winner-announcement">🎉 Player Wins!</h2>
+      <div id="score-list" class="score-list"></div>
+      <button id="scoreboard-restart-btn" class="btn btn-success btn-full" style="margin-top: 16px;">Play Again</button>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
 </body>

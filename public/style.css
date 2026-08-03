@@ -1,4 +1,13 @@
 /* --- RESET & COLOR PALETTE --- */
+html {
+  /* Reserves the scrollbar's width whether or not it's currently needed.
+     Without this, centered content shifts sideways by ~half the
+     scrollbar's width the instant page height crosses the viewport
+     threshold - exactly what happens as the lobby player list grows. */
+  scrollbar-gutter: stable;
+  overflow-y: scroll; /* fallback for browsers without scrollbar-gutter support */
+}
+
 :root {
   --bg-base: #0f172a;          /* Slate Dark Background */
   --bg-surface: #1e293b;       /* Panel Background */
@@ -159,6 +168,94 @@ body {
   display: flex;
   gap: 10px;
   margin-top: 6px;
+}
+
+/* --- LOBBY PLAYERS PANEL --- */
+.players-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  margin-bottom: 8px;
+}
+
+.players-panel-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.players-count-badge {
+  background: var(--bg-base);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--bg-surface-light);
+}
+
+.players-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Bounded height so a growing player list can never grow the page past
+     the viewport - the actual root cause of the layout shift, fixed at
+     the source rather than just papered over by the scrollbar-gutter rule
+     above. Scrolls internally instead. */
+  max-height: 168px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.players-list::-webkit-scrollbar {
+  width: 6px;
+}
+.players-list::-webkit-scrollbar-thumb {
+  background: var(--bg-surface-light);
+  border-radius: 3px;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-base);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.player-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--uno-green);
+  flex-shrink: 0;
+}
+
+.player-name {
+  flex: 1;
+  color: var(--text-main);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.you-tag {
+  background: var(--uno-blue);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 /* --- SIMPLE SOLID BUTTONS WITH FULL ANIMATIONS --- */
