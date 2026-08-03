@@ -2,6 +2,30 @@ import { createGame, getPublicState } from './gameEngine.js';
 
 const rooms = {};
 
+export function broadcastGameState(io, room) {
+  if (!room.gameState) return;
+
+  const nameById = new Map(room.players.map(p => [p.id, p.name]));
+  const connectedById = new Map(room.players.map(p => [p.id, p.connected]));
+
+  const sendTo = (participant) => {
+    if (!participant.socketId) return;
+    const publicState = getPublicState(room.gameState, participant.id);
+    // getPublicState only knows about ids/hands - it has no concept of a
+    // display name or connection status, so stitch those in from the room's
+    // player list before this goes out over the wire.
+    publicState.players = publicState.players.map(p => ({
+      ...p,
+      name: nameById.get(p.id) ?? 'Player',
+      connected: connectedById.get(p.id) ?? false,
+    }));
+    io.to(participant.socketId).emit('game_state_update', publicState);
+  };
+
+  room.players.forEach(sendTo);
+  room.spectators.forEach(sendTo);
+}
+
 export function getRoom(roomId) {
   if (!rooms[roomId]) {
     rooms[roomId] = {

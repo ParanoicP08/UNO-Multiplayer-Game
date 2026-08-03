@@ -2,7 +2,7 @@ import http from 'http';
 import express from 'express';
 import { Server } from 'socket.io';
 
-import { getRoom, handleJoin, handleDisconnect, broadcastGameState } from './room.js';
+import { getRoom, handleJoin, handleDisconnect, broadcastGameState } from './rooms.js';
 import { createGame, playCard, drawCard, passTurn, catchUnoFailure, chooseStartColor, GameError } from './gameEngine.js';
 
 const app = express();
@@ -397,6 +397,9 @@ io.on('connection', (socket) => {
     const { roomId } = socket.data;
     if (!roomId) return;
     const room = getRoom(roomId);
+    // A game already running (no winner yet) must never be clobbered by a
+    // stray/duplicate start_game - only allow starting fresh.
+    if (room.gameState && !room.gameState.winner) return;
 
     safeAction(socket, () => {
       room.gameState = createGame(room.players.map(p => p.id));
@@ -461,6 +464,11 @@ io.on('connection', (socket) => {
 
   socket.on('restart-game', ({ room: roomId }) => {
     const room = getRoom(roomId);
+    // Only allow a restart once the current match actually has a winner.
+    // Without this, any single player - e.g. via their own AFK-timeout
+    // popup, which can fire mid-game with no winner set - could reset the
+    // board and re-deal everyone's hands out from under the whole table.
+    if (room.gameState && !room.gameState.winner) return;
     safeAction(socket, () => {
       room.gameState = createGame(room.players.map(p => p.id));
       pushState(io, room);
@@ -492,7 +500,7 @@ io.on('connection', (socket) => {
       }
     }
     const result = handleDisconnect(socket, io);
-    if (result) syncTurnTimer(io, result.room);
+    if (result) pushState(io, result.room);
   });
 });
 

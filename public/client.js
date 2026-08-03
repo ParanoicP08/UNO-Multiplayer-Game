@@ -137,8 +137,8 @@ socket.on('game_state_update', (state) => {
     if (passBtn) passBtn.style.display = 'none';
   } else {
     if (restartBtn) restartBtn.style.display = 'none';
-    if (drawBtn) drawBtn.style.display = 'inline-block';
-    if (passBtn) passBtn.style.display = 'inline-block';
+    if (drawBtn) drawBtn.style.display = state.awaitingStartColor ? 'none' : 'inline-block';
+    if (passBtn) passBtn.style.display = state.awaitingStartColor ? 'none' : 'inline-block';
     if (statusTxt) {
       statusTxt.innerText = isMyTurn ? "👉 IT'S YOUR TURN!" : `Waiting for ${currentPName}...`;
       statusTxt.style.color = isMyTurn ? "var(--uno-green)" : "var(--uno-yellow)";
@@ -342,17 +342,16 @@ function showTimeoutModal() {
     modal.innerHTML = `
       <div style="background:#1e293b;padding:28px;border-radius:12px;text-align:center;color:#fff;max-width:340px;width:100%;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
         <h3 style="margin-bottom:12px;color:#ef4444;font-size:1.5rem;">⏱️ Time's Up!</h3>
-        <p style="margin-bottom:24px;color:#94a3b8;line-height:1.4;">Your time for this move has finished.</p>
+        <p style="margin-bottom:24px;color:#94a3b8;line-height:1.4;">Your time for this move has finished. The server drew/passed for you automatically - play continues.</p>
         <div style="display:flex;gap:12px;justify-content:center;">
-          <button id="timeout-restart-btn" style="background:#22c55e;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Restart Game</button>
+          <button id="timeout-continue-btn" style="background:#22c55e;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">OK, Got It</button>
           <button id="timeout-exit-btn" style="background:#ef4444;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Exit</button>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
 
-    document.getElementById('timeout-restart-btn').onclick = () => {
-      socket.emit('restart-game', { room: currentRoom });
+    document.getElementById('timeout-continue-btn').onclick = () => {
       hideTimeoutModal();
     };
     document.getElementById('timeout-exit-btn').onclick = () => {
