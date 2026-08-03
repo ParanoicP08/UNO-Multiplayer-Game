@@ -1,4 +1,4 @@
-import { createGame, getPublicState } from './gameEngine.js';
+import { createGame, getPublicState, removePlayerFromGame } from './gameEngine.js';
 
 const rooms = {};
 
@@ -11,9 +11,6 @@ export function broadcastGameState(io, room) {
   const sendTo = (participant) => {
     if (!participant.socketId) return;
     const publicState = getPublicState(room.gameState, participant.id);
-    // getPublicState only knows about ids/hands - it has no concept of a
-    // display name or connection status, so stitch those in from the room's
-    // player list before this goes out over the wire.
     publicState.players = publicState.players.map(p => ({
       ...p,
       name: nameById.get(p.id) ?? 'Player',
@@ -56,9 +53,15 @@ export function handleJoin(socket, { roomId, playerName, playerId }) {
     return { success: true, room, isSpectator: false };
   } 
   
-  // If game already started, join as Spectator
-  if (room.gameState && room.gameState.winner === null) {
-    room.spectators.push({ id: playerId, name: playerName, socketId: socket.id });
+  // If game is in progress OR room reached maximum capacity (10 players), join as Spectator
+  if ((room.gameState && room.gameState.winner === null) || room.players.length >= 10) {
+    let spec = room.spectators.find(s => s.id === playerId);
+    if (spec) {
+      spec.socketId = socket.id;
+      spec.name = playerName;
+    } else {
+      room.spectators.push({ id: playerId, name: playerName, socketId: socket.id });
+    }
     socket.join(roomId);
     return { success: true, room, isSpectator: true };
   }
@@ -67,7 +70,8 @@ export function handleJoin(socket, { roomId, playerName, playerId }) {
     id: playerId,
     name: playerName,
     socketId: socket.id,
-    connected: true
+    connected: true,
+    afkStrikes: 0
   });
 
   socket.join(roomId);
@@ -78,7 +82,6 @@ export function handleDisconnect(socket, io) {
   for (const roomId in rooms) {
     const room = rooms[roomId];
     
-    // Check if spectator
     room.spectators = room.spectators.filter(s => s.socketId !== socket.id);
 
     const player = room.players.find(p => p.socketId === socket.id);
@@ -89,10 +92,15 @@ export function handleDisconnect(socket, io) {
         room.players = room.players.filter(p => p.id !== player.id);
         delete room.disconnectTimeouts[player.id];
         
+        if (room.gameState) {
+          removePlayerFromGame(room.gameState, player.id);
+        }
+
         if (room.players.length === 0 && room.spectators.length === 0) {
           delete rooms[roomId];
         } else {
           io.to(roomId).emit('lobby_update', room.players);
+          if (room.gameState) broadcastGameState(io, room);
         }
       }, 30000);
 

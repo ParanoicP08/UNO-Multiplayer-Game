@@ -4,33 +4,35 @@ export const COLORS = ['red', 'yellow', 'green', 'blue'];
 export const WILD = 'wild';
 
 // type: 'number' | 'skip' | 'reverse' | 'draw2' | 'wild' | 'wild4'
-export function createDeck() {
+export function createDeck(numDecks = 1) {
   const deck = [];
   let id = 0;
 
-  for (const color of COLORS) {
-    // One 0 per color
-    deck.push({ id: id++, color, type: 'number', value: 0 });
-    // Two each of 1-9 per color
-    for (let v = 1; v <= 9; v++) {
-      deck.push({ id: id++, color, type: 'number', value: v });
-      deck.push({ id: id++, color, type: 'number', value: v });
+  for (let d = 0; d < numDecks; d++) {
+    for (const color of COLORS) {
+      // One 0 per color
+      deck.push({ id: id++, color, type: 'number', value: 0 });
+      // Two each of 1-9 per color
+      for (let v = 1; v <= 9; v++) {
+        deck.push({ id: id++, color, type: 'number', value: v });
+        deck.push({ id: id++, color, type: 'number', value: v });
+      }
+      // Two each of Skip, Reverse, Draw Two per color
+      for (let i = 0; i < 2; i++) {
+        deck.push({ id: id++, color, type: 'skip' });
+        deck.push({ id: id++, color, type: 'reverse' });
+        deck.push({ id: id++, color, type: 'draw2' });
+      }
     }
-    // Two each of Skip, Reverse, Draw Two per color
-    for (let i = 0; i < 2; i++) {
-      deck.push({ id: id++, color, type: 'skip' });
-      deck.push({ id: id++, color, type: 'reverse' });
-      deck.push({ id: id++, color, type: 'draw2' });
+
+    // 4 Wild, 4 Wild Draw Four
+    for (let i = 0; i < 4; i++) {
+      deck.push({ id: id++, color: WILD, type: 'wild' });
+      deck.push({ id: id++, color: WILD, type: 'wild4' });
     }
   }
 
-  // 4 Wild, 4 Wild Draw Four
-  for (let i = 0; i < 4; i++) {
-    deck.push({ id: id++, color: WILD, type: 'wild' });
-    deck.push({ id: id++, color: WILD, type: 'wild4' });
-  }
-
-  return deck; // 108 cards total
+  return deck;
 }
 
 export function shuffle(deck, rng = Math.random) {
