@@ -1,7 +1,7 @@
 {
   "name": "uno-multiplayer-game",
   "version": "1.0.0",
-  "description": "UNO Multiplayer Game",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
